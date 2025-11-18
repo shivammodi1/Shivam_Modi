@@ -58,7 +58,7 @@ const Home: React.FC = () => {
             {/* Social Links */}
             <div className="flex space-x-4 pt-4">
               <a
-                href="https://github.com/shivammodi001"
+                href="https://github.com/shivammodi1"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -87,7 +87,7 @@ const Home: React.FC = () => {
 
 
               <a
-                href="https://www.linkedin.com/in/shivam-modi-370509295/"
+                href="https://www.linkedin.com/in/shivammodi1/"
                 target="_blank"
                 rel="noopener noreferrer"
               >

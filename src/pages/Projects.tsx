@@ -260,7 +260,7 @@ const Projects: React.FC = () => {
           </p>
           <Button asChild size="lg" className="shadow-soft hover:shadow-glow">
             <a
-              href="https://github.com/shivammodi001"
+              href="https://github.com/shivammodi1"
               target="_blank"
               rel="noopener noreferrer"
             >
