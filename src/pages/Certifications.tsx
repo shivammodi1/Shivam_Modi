@@ -74,6 +74,23 @@ const Certifications: React.FC = () => {
       skills: ["Data Structures", "Algorithms", "Problem Solving", "Optimization"],
       verified: true,
     },
+    {
+  id: 5,
+  title: "Winner – Paranox 2.0 National Level Hackathon",
+  issuer: "TechXNinjas | Newton School of Technology, Sonipat",
+  date: "Nov 2025",
+  description:
+    "Won the Paranox 2.0 National Level Hackathon held at Newton School of Technology, Sonipat, Haryana. Competed against thousands of participants from colleges across India and developed an innovative solution during the grand finale hackathon event.",
+  certificateUrl: "https://www.linkedin.com/posts/shivammodi1_paranox2-winner-nationalhackathon-activity-7396210919103512576-uDhU",
+  skills: [
+    "Hackathon Development",
+    "Innovation",
+    "Problem Solving",
+    "Full Stack Development",
+    "Team Collaboration"
+  ],
+  verified: true,
+}
   ];
 
   // Initialize bubbles
