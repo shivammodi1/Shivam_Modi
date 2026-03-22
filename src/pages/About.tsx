@@ -22,7 +22,7 @@ const About: React.FC = () => {
   const techStack = ["HTML", "CSS", "JavaScript", "TypeScript", "React", "Node.js", "Express.js", "MongoDB", "MySQL", "Python", "C", "C++"];
 
   return (
-    <div style={{ background: "#020408", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", paddingTop: 80 }}>
+    <div style={{ background: "#020408", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", paddingTop: 80, paddingBottom: 80 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
         .about-reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }

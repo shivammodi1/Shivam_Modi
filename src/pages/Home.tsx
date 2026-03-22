@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, Download, Github, Linkedin, Mail, Code2, Layers, Zap } from "lucide-react";
-// Download kept for the CTA button below
 import { Link } from "react-router-dom";
 import Chatbot from "@/components/Chatbot";
+import Loader from "@/components/Loader"; // Loader import karo
 
 const Home: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -10,13 +10,25 @@ const Home: React.FC = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
   const [typedText, setTypedText] = useState("");
+  const [showLoader, setShowLoader] = useState(true); // Loader state
   const roles = ["Full-Stack Developer", "Problem Solver", "UI Architect", "Open Source Contributor"];
   const [roleIndex, setRoleIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Particle canvas
+  
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoader(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  
+  useEffect(() => {
+    if (showLoader) return;
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -87,24 +99,30 @@ const Home: React.FC = () => {
     };
     window.addEventListener("resize", resize);
     return () => { cancelAnimationFrame(animFrame); window.removeEventListener("resize", resize); };
-  }, []);
+  }, [showLoader]); // showLoader par dependency
 
   // Mouse parallax
   useEffect(() => {
+    if (showLoader) return; // Loader visible hai to parallax mat chalao
+    
     const handleMouse = (e: MouseEvent) => {
       setMousePos({ x: e.clientX / window.innerWidth - 0.5, y: e.clientY / window.innerHeight - 0.5 });
     };
     window.addEventListener("mousemove", handleMouse);
     return () => window.removeEventListener("mousemove", handleMouse);
-  }, []);
+  }, [showLoader]);
 
   // Entry animation
   useEffect(() => {
-    setTimeout(() => setIsLoaded(true), 100);
-  }, []);
+    if (!showLoader) {
+      setTimeout(() => setIsLoaded(true), 100);
+    }
+  }, [showLoader]);
 
-  // Typewriter
+  // Typewriter (tabhi chalega jab loader hide ho)
   useEffect(() => {
+    if (showLoader) return;
+    
     const currentRole = roles[roleIndex];
     const speed = isDeleting ? 40 : 80;
 
@@ -124,7 +142,7 @@ const Home: React.FC = () => {
     }, speed);
 
     return () => clearTimeout(timer);
-  }, [charIndex, isDeleting, roleIndex]);
+  }, [charIndex, isDeleting, roleIndex, showLoader]);
 
   const stats = [
     { icon: <Layers className="w-5 h-5" />, value: "10+", label: "Projects Built" },
@@ -132,6 +150,12 @@ const Home: React.FC = () => {
     { icon: <Zap className="w-5 h-5" />, value: "2+", label: "Certifications" },
   ];
 
+  // Agar loader show ho raha hai to sirf loader render karo
+  if (showLoader) {
+    return <Loader />;
+  }
+
+  // Loader hide hone ke baad home page render karo
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: "#020408", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
