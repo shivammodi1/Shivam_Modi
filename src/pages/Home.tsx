@@ -155,7 +155,7 @@ const Home: React.FC = () => {
     return <Loader />;
   }
 
-  // Loader hide hone ke baad home page render karo
+
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: "#020408", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
@@ -430,7 +430,7 @@ const Home: React.FC = () => {
               {/* Socials */}
               <div className="delay-5 flex gap-3">
                 {[
-                  { href: "https://github.com/shivammodi001", icon: <Github size={18} /> },
+                  { href: "https://github.com/shivammodi1", icon: <Github size={18} /> },
                   { href: "https://www.linkedin.com/in/shivammodi1/", icon: <Linkedin size={18} /> },
                   { href: "mailto:smodi9846@gmail.com", icon: <Mail size={18} /> },
                 ].map((s, i) => (
