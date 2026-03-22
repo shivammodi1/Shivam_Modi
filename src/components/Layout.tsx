@@ -7,7 +7,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div style={{ minHeight: '100vh', background: '#020408', color: 'white' }}>
       <Navigation />
       <main>
         {children}
