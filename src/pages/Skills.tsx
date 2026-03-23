@@ -1,6 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Code2, Database, Globe, Server, Zap, Shield } from "lucide-react";
 
+/* ─── Responsive Hook ─────────────────────────────────────────── */
+const useBreakpoint = () => {
+  const [bp, setBp] = useState<"mobile" | "tablet" | "desktop">("desktop");
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      setBp(w < 600 ? "mobile" : w < 960 ? "tablet" : "desktop");
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return bp;
+};
+
 /* ─── Globe Component ─────────────────────────────────────────── */
 const EarthGlobe: React.FC = () => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -10,6 +25,11 @@ const EarthGlobe: React.FC = () => {
     if (!mountRef.current) return;
     const el = mountRef.current;
 
+    const existing = document.querySelector('script[src*="three.min.js"]');
+    if (existing && (window as any).THREE) {
+      initScene(el);
+      return;
+    }
     const script = document.createElement("script");
     script.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
     script.onload = () => initScene(el);
@@ -33,32 +53,31 @@ const EarthGlobe: React.FC = () => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
+
+    // Scale globe size based on container width
+    const globeScale = Math.min(1, W / 520);
+    const baseRadius = 1.2 * globeScale;
     camera.position.set(0, 0, 4.5);
 
-    // ── Earth base ───────────────────────────────────────────────
-    const earthGeo = new THREE.SphereGeometry(1.2, 64, 64);
+    const earthGeo = new THREE.SphereGeometry(baseRadius, 64, 64);
     const earthMat = new THREE.MeshPhongMaterial({
-      color: 0x1565c0,
-      emissive: 0x0a1a3a,
-      specular: 0x4fc3f7,
-      shininess: 60,
+      color: 0x1565c0, emissive: 0x0a1a3a, specular: 0x4fc3f7, shininess: 60,
     });
     const earth = new THREE.Mesh(earthGeo, earthMat);
     scene.add(earth);
 
-    // Land patches as child meshes so they rotate with the earth
     const landDefs = [
-      { lat: 48,  lon: -100, latSpan: 0.50, lonSpan: 0.85 }, // N America
-      { lat: 55,  lon: 15,   latSpan: 0.35, lonSpan: 0.50 }, // Europe
-      { lat: 5,   lon: 22,   latSpan: 0.70, lonSpan: 0.60 }, // Africa
-      { lat: 38,  lon: 90,   latSpan: 0.70, lonSpan: 1.00 }, // Asia
-      { lat: -25, lon: 133,  latSpan: 0.40, lonSpan: 0.48 }, // Australia
-      { lat: -10, lon: -55,  latSpan: 0.55, lonSpan: 0.42 }, // S America
-      { lat: 65,  lon: -30,  latSpan: 0.20, lonSpan: 0.30 }, // Greenland
+      { lat: 48,  lon: -100, latSpan: 0.50, lonSpan: 0.85 },
+      { lat: 55,  lon: 15,   latSpan: 0.35, lonSpan: 0.50 },
+      { lat: 5,   lon: 22,   latSpan: 0.70, lonSpan: 0.60 },
+      { lat: 38,  lon: 90,   latSpan: 0.70, lonSpan: 1.00 },
+      { lat: -25, lon: 133,  latSpan: 0.40, lonSpan: 0.48 },
+      { lat: -10, lon: -55,  latSpan: 0.55, lonSpan: 0.42 },
+      { lat: 65,  lon: -30,  latSpan: 0.20, lonSpan: 0.30 },
     ];
     landDefs.forEach(({ lat, lon, latSpan, lonSpan }) => {
       const geo = new THREE.SphereGeometry(
-        1.202, 12, 12,
+        baseRadius * 1.002, 12, 12,
         (lon * Math.PI) / 180, lonSpan,
         Math.PI / 2 - (lat * Math.PI) / 180, latSpan
       );
@@ -66,38 +85,35 @@ const EarthGlobe: React.FC = () => {
       earth.add(new THREE.Mesh(geo, mat));
     });
 
-    // Atmosphere
     const atmMat = new THREE.MeshPhongMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.07, side: THREE.BackSide });
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.27, 48, 48), atmMat));
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(baseRadius * 1.058, 48, 48), atmMat));
 
-    // Grid lines
     const gridMat = new THREE.MeshBasicMaterial({ color: 0x4fc3f7, wireframe: true, transparent: true, opacity: 0.055 });
-    const grid = new THREE.Mesh(new THREE.SphereGeometry(1.21, 18, 12), gridMat);
+    const grid = new THREE.Mesh(new THREE.SphereGeometry(baseRadius * 1.008, 18, 12), gridMat);
     scene.add(grid);
 
-    // ── Skill Orbits ─────────────────────────────────────────────
+    // Scale orbit radii with globe
+    const rs = globeScale;
     const skillsData = [
-      { label: "React",      color: 0x61dafb, radius: 2.0, speed: 0.008, tilt: 0.30,  phase: 0.0  },
-      { label: "Node.js",    color: 0x68a063, radius: 2.35,speed: 0.006, tilt: 0.80,  phase: 1.05 },
-      { label: "MongoDB",    color: 0x4db33d, radius: 2.65,speed: 0.005, tilt: -0.40, phase: 2.10 },
-      { label: "Python",     color: 0xffdd57, radius: 2.15,speed: 0.007, tilt: -0.90, phase: 0.70 },
-      { label: "TypeScript", color: 0x3178c6, radius: 2.45,speed: 0.009, tilt: 0.60,  phase: 3.50 },
-      { label: "Express",    color: 0xcccccc, radius: 2.25,speed: 0.006, tilt: 1.10,  phase: 1.80 },
-      { label: "MySQL",      color: 0x00758f, radius: 2.70,speed: 0.004, tilt: -0.20, phase: 4.20 },
-      { label: "Tailwind",   color: 0x38bdf8, radius: 2.05,speed: 0.010, tilt: 1.50,  phase: 5.00 },
-      { label: "C++",        color: 0xa855f7, radius: 2.55,speed: 0.005, tilt: -1.20, phase: 2.80 },
-      { label: "Git",        color: 0xf05032, radius: 2.30,speed: 0.007, tilt: 0.40,  phase: 3.90 },
-      { label: "Linux",      color: 0xfbbf24, radius: 2.60,speed: 0.006, tilt: -0.70, phase: 0.30 },
-      { label: "AWS",        color: 0xff9900, radius: 2.15,speed: 0.008, tilt: 1.00,  phase: 5.60 },
+      { label: "React",      color: 0x61dafb, radius: 2.0 * rs + (1 - rs) * 1.5, speed: 0.008, tilt: 0.30,  phase: 0.0  },
+      { label: "Node.js",    color: 0x68a063, radius: 2.35 * rs + (1 - rs) * 1.5, speed: 0.006, tilt: 0.80,  phase: 1.05 },
+      { label: "MongoDB",    color: 0x4db33d, radius: 2.65 * rs + (1 - rs) * 1.5, speed: 0.005, tilt: -0.40, phase: 2.10 },
+      { label: "Python",     color: 0xffdd57, radius: 2.15 * rs + (1 - rs) * 1.5, speed: 0.007, tilt: -0.90, phase: 0.70 },
+      { label: "TypeScript", color: 0x3178c6, radius: 2.45 * rs + (1 - rs) * 1.5, speed: 0.009, tilt: 0.60,  phase: 3.50 },
+      { label: "Express",    color: 0xcccccc, radius: 2.25 * rs + (1 - rs) * 1.5, speed: 0.006, tilt: 1.10,  phase: 1.80 },
+      { label: "MySQL",      color: 0x00758f, radius: 2.70 * rs + (1 - rs) * 1.5, speed: 0.004, tilt: -0.20, phase: 4.20 },
+      { label: "Tailwind",   color: 0x38bdf8, radius: 2.05 * rs + (1 - rs) * 1.5, speed: 0.010, tilt: 1.50,  phase: 5.00 },
+      { label: "C++",        color: 0xa855f7, radius: 2.55 * rs + (1 - rs) * 1.5, speed: 0.005, tilt: -1.20, phase: 2.80 },
+      { label: "Git",        color: 0xf05032, radius: 2.30 * rs + (1 - rs) * 1.5, speed: 0.007, tilt: 0.40,  phase: 3.90 },
+      { label: "Linux",      color: 0xfbbf24, radius: 2.60 * rs + (1 - rs) * 1.5, speed: 0.006, tilt: -0.70, phase: 0.30 },
+      { label: "AWS",        color: 0xff9900, radius: 2.15 * rs + (1 - rs) * 1.5, speed: 0.008, tilt: 1.00,  phase: 5.60 },
     ];
 
-    // Canvas label sprite maker
     const makeSprite = (text: string, color: number) => {
       const cv = document.createElement("canvas");
       cv.width = 220; cv.height = 56;
       const ctx = cv.getContext("2d")!;
       const hex = "#" + color.toString(16).padStart(6, "0");
-
       ctx.clearRect(0, 0, 220, 56);
       ctx.beginPath();
       const r = 10;
@@ -115,7 +131,6 @@ const EarthGlobe: React.FC = () => {
       ctx.strokeStyle = hex;
       ctx.lineWidth = 2;
       ctx.stroke();
-
       ctx.beginPath();
       ctx.arc(22, 28, 5, 0, Math.PI * 2);
       ctx.fillStyle = hex;
@@ -123,43 +138,34 @@ const EarthGlobe: React.FC = () => {
       ctx.shadowBlur = 8;
       ctx.fill();
       ctx.shadowBlur = 0;
-
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 19px Arial, sans-serif";
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
       ctx.fillText(text, 36, 28);
-
       const tex = new THREE.CanvasTexture(cv);
       tex.needsUpdate = true;
       const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
       const sprite = new THREE.Sprite(mat);
-      sprite.scale.set(0.95, 0.24, 1);
+      sprite.scale.set(0.95 * rs, 0.24 * rs, 1);
       return sprite;
     };
 
     const orbitNodes = skillsData.map((s) => {
-      // Orbit ring
       const ringGeo = new THREE.TorusGeometry(s.radius, 0.004, 8, 128);
       const ringMat = new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.12 });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = s.tilt;
       ring.rotation.z = s.phase * 0.25;
       scene.add(ring);
-
-      // Node sphere
       const nodeMat = new THREE.MeshPhongMaterial({ color: s.color, emissive: s.color, emissiveIntensity: 0.55, shininess: 120 });
-      const node = new THREE.Mesh(new THREE.SphereGeometry(0.058, 16, 16), nodeMat);
+      const node = new THREE.Mesh(new THREE.SphereGeometry(0.058 * rs, 16, 16), nodeMat);
       scene.add(node);
-
-      // Label
       const label = makeSprite(s.label, s.color);
       scene.add(label);
-
       return { ...s, ring, node, label, angle: s.phase };
     });
 
-    // ── Lights ───────────────────────────────────────────────────
     scene.add(new THREE.AmbientLight(0x334466, 1.1));
     const sun = new THREE.DirectionalLight(0xfff5e0, 2.0);
     sun.position.set(5, 3, 5);
@@ -168,7 +174,6 @@ const EarthGlobe: React.FC = () => {
     rim.position.set(-4, -2, -3);
     scene.add(rim);
 
-    // ── Drag Controls ────────────────────────────────────────────
     let dragging = false;
     let prev = { x: 0, y: 0 };
     let vel = { x: 0, y: 0 };
@@ -183,19 +188,20 @@ const EarthGlobe: React.FC = () => {
     };
     const up = () => { dragging = false; };
 
-    const el2 = container;
-    el2.addEventListener("mousedown",  (e) => down(e.clientX, e.clientY));
-    window.addEventListener("mousemove", (e) => move(e.clientX, e.clientY));
-    window.addEventListener("mouseup",  up);
-    el2.addEventListener("touchstart", (e) => down(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    window.addEventListener("touchmove",  (e) => move(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    window.addEventListener("touchend",  up);
+    container.addEventListener("mousedown",  (e) => down(e.clientX, e.clientY));
+    const onMouseMove = (e: MouseEvent) => move(e.clientX, e.clientY);
+    const onMouseUp = () => up();
+    const onTouchMove = (e: TouchEvent) => move(e.touches[0].clientX, e.touches[0].clientY);
+    const onTouchEnd = () => up();
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    container.addEventListener("touchstart", (e) => down(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
 
-    // ── Animation ────────────────────────────────────────────────
     let raf: number;
     const animate = () => {
       raf = requestAnimationFrame(animate);
-
       if (autoSpin) {
         earth.rotation.y += 0.0025;
         grid.rotation.y  += 0.0025;
@@ -205,30 +211,24 @@ const EarthGlobe: React.FC = () => {
         vel.x *= 0.93; vel.y *= 0.93;
         if (Math.abs(vel.x) < 0.00008 && Math.abs(vel.y) < 0.00008) autoSpin = true;
       }
-
       const t = Date.now() * 0.001;
       orbitNodes.forEach((s) => {
         s.angle += s.speed;
-        // Tilted orbit math
         const cosT = Math.cos(s.tilt), sinT = Math.sin(s.tilt);
         const x0 = Math.cos(s.angle) * s.radius;
         const z0 = Math.sin(s.angle) * s.radius;
-        const x = x0;
-        const y = z0 * sinT;
-        const z = z0 * cosT;
-
-        s.node.position.set(x, y, z);
-        s.label.position.set(x, y + 0.20, z);
+        s.node.position.set(x0, z0 * sinT, z0 * cosT);
+        s.label.position.set(x0, z0 * sinT + 0.20 * rs, z0 * cosT);
         (s.node.material as any).emissiveIntensity = 0.4 + 0.45 * Math.sin(t * 2 + s.phase);
       });
-
       renderer.render(scene, camera);
     };
     animate();
 
     const onResize = () => {
       const w = container.clientWidth, h = container.clientHeight;
-      camera.aspect = w / h; camera.updateProjectionMatrix();
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
     window.addEventListener("resize", onResize);
@@ -237,22 +237,58 @@ const EarthGlobe: React.FC = () => {
       cleanup: () => {
         cancelAnimationFrame(raf);
         try { renderer.dispose(); container.removeChild(renderer.domElement); } catch {}
-        window.removeEventListener("mousemove", (e) => move(e.clientX, e.clientY));
-        window.removeEventListener("mouseup", up);
-        window.removeEventListener("touchmove", (e) => move(e.touches[0].clientX, e.touches[0].clientY));
-        window.removeEventListener("touchend", up);
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        window.removeEventListener("touchmove", onTouchMove);
+        window.removeEventListener("touchend", onTouchEnd);
         window.removeEventListener("resize", onResize);
       },
     };
   };
 
+  return <div ref={mountRef} style={{ width: "100%", height: "100%", cursor: "grab" }} />;
+};
+
+/* ─── Mobile Tap Card (extracted to obey Rules of Hooks) ─────── */
+const MobileLearningCard: React.FC<{ icon: string; tech: string; desc: string }> = ({ icon, tech, desc }) => {
+  const [tapped, setTapped] = useState(false);
   return (
-    <div ref={mountRef} style={{ width: "100%", height: "100%", cursor: "grab" }} />
+    <div
+      onClick={() => setTapped(t => !t)}
+      style={{
+        background: tapped
+          ? "rgba(8,13,20,.95)"
+          : "linear-gradient(135deg,rgba(123,47,247,.18),rgba(0,212,255,.12))",
+        border: `1px solid ${tapped ? "rgba(0,212,255,.2)" : "rgba(0,212,255,.12)"}`,
+        borderRadius: 18,
+        padding: "18px 20px",
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        cursor: "pointer",
+        transition: "all 0.35s ease",
+      }}
+    >
+      <div style={{ fontSize: 26, flexShrink: 0 }}>{icon}</div>
+      <div style={{ flex: 1, textAlign: "left" }}>
+        <div style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "'Space Grotesk',sans-serif", marginBottom: 4 }}>
+          {tech}
+        </div>
+        <div style={{ color: tapped ? "#00d4ff" : "rgba(255,255,255,.35)", fontSize: 12, lineHeight: 1.5, transition: "color 0.3s" }}>
+          {tapped ? desc : "tap to reveal →"}
+        </div>
+      </div>
+    </div>
   );
 };
 
 /* ─── Main Page ────────────────────────────────────────────────── */
 const Skills: React.FC = () => {
+  const bp = useBreakpoint();
+  const isMobile = bp === "mobile";
+  const isTablet = bp === "tablet";
+  const isDesktop = bp === "desktop";
+
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const [animatedBars, setAnimatedBars] = useState(false);
   const barsRef = useRef<HTMLDivElement>(null);
@@ -283,19 +319,19 @@ const Skills: React.FC = () => {
   ];
 
   const proficiencies = [
-    { skill: "Frontend (React, JS, Tailwind)",       level: 90, color: "#00d4ff" },
-    { skill: "Backend (Node, Express, Python)",      level: 80, color: "#7b2ff7" },
-    { skill: "Databases (MongoDB, MySQL)",           level: 75, color: "#00ff88" },
-    { skill: "Programming Languages (C, C++, Python)",level:85, color: "#ff006e" },
-    { skill: "TypeScript",                           level: 70, color: "#ffc800" },
-    { skill: "Cloud & DevTools (AWS, Git, Vercel)",  level: 65, color: "#9b6fff" },
-    { skill: "Linux & Cybersecurity",               level: 60, color: "#ff6b6b" },
+    { skill: "Frontend (React, JS, Tailwind)",        level: 90, color: "#00d4ff" },
+    { skill: "Backend (Node, Express, Python)",       level: 80, color: "#7b2ff7" },
+    { skill: "Databases (MongoDB, MySQL)",            level: 75, color: "#00ff88" },
+    { skill: "Programming Languages (C, C++, Python)",level: 85, color: "#ff006e" },
+    { skill: "TypeScript",                            level: 70, color: "#ffc800" },
+    { skill: "Cloud & DevTools (AWS, Git, Vercel)",   level: 65, color: "#9b6fff" },
+    { skill: "Linux & Cybersecurity",                 level: 60, color: "#ff6b6b" },
   ];
 
   const learning = [
-    { tech: "Next.js",     desc: "Full-stack React framework for production apps 🚀", icon: "⚡" },
-    { tech: "DSA",         desc: "Mastering algorithms & problem-solving 💡",          icon: "🧩" },
-    { tech: "Blockchain",  desc: "Exploring Web3 & decentralized apps 🔗",             icon: "🔮" },
+    { tech: "Next.js",    desc: "Full-stack React framework for production apps 🚀", icon: "⚡" },
+    { tech: "DSA",        desc: "Mastering algorithms & problem-solving 💡",          icon: "🧩" },
+    { tech: "Blockchain", desc: "Exploring Web3 & decentralized apps 🔗",             icon: "🔮" },
   ];
 
   const orbitLegend = [
@@ -307,18 +343,35 @@ const Skills: React.FC = () => {
     { label: "Linux",      color: "#fbbf24" }, { label: "AWS",       color: "#ff9900" },
   ];
 
+  // Responsive grid columns for skill categories
+  const catGridCols = isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(3, 1fr)";
+  // Proficiency bars: 1 col on mobile, 2 cols on tablet+
+  const barGridCols = isMobile ? "1fr" : "1fr 1fr";
+  // Globe height scales with screen
+  const globeHeight = isMobile ? 300 : isTablet ? 420 : 580;
+  // Flip cards: full width on mobile, row on tablet+
+  const flipSize = isMobile ? "100%" : 155;
+  const flipHeight = isMobile ? 100 : 155;
+
   return (
-    <div style={{ background: "#020408", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", paddingTop: 80 }}>
+    <div style={{
+      background: "#020408",
+      minHeight: "100vh",
+      fontFamily: "'DM Sans', sans-serif",
+      paddingTop: isMobile ? 60 : 80,
+      overflowX: "hidden",
+    }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         .s-rev { opacity:0; transform:translateY(30px); transition:opacity .7s ease,transform .7s ease; }
         .s-rev.show { opacity:1; transform:translateY(0); }
 
         .globe-wrap {
           position: relative;
-          height: 580px;
-          border-radius: 28px;
+          border-radius: 20px;
           border: 1px solid rgba(255,255,255,0.05);
           overflow: hidden;
           background: radial-gradient(ellipse at 50% 60%, rgba(123,47,247,0.1) 0%, rgba(0,212,255,0.05) 40%, transparent 70%);
@@ -343,16 +396,13 @@ const Skills: React.FC = () => {
             radial-gradient(1px 1px at 96% 20%, rgba(255,255,255,.7) 0%, transparent 100%),
             radial-gradient(1px 1px at 30% 75%, rgba(255,255,255,.4) 0%, transparent 100%);
         }
-
         .globe-canvas { position:relative; z-index:1; width:100%; height:100%; }
-
         .globe-vignette {
           position:absolute; inset:0; z-index:2; pointer-events:none;
           background: radial-gradient(ellipse at center, transparent 50%, rgba(2,4,8,.75) 100%);
         }
-
         .drag-hint {
-          position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+          position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
           background:rgba(0,212,255,.07); border:1px solid rgba(0,212,255,.18);
           border-radius:100px; padding:5px 16px;
           font-size:11px; color:rgba(0,212,255,.7);
@@ -365,7 +415,7 @@ const Skills: React.FC = () => {
         .cat-card {
           background:rgba(8,13,20,.8);
           border:1px solid rgba(255,255,255,.06);
-          border-radius:20px; padding:24px;
+          border-radius:20px; padding:clamp(16px,3vw,24px);
           transition:all .35s ease;
           position:relative; overflow:hidden;
         }
@@ -376,9 +426,13 @@ const Skills: React.FC = () => {
         }
         .cat-card:hover::after { transform:scaleX(1); }
         .cat-card:hover { border-color:rgba(255,255,255,.1); transform:translateY(-5px); box-shadow:0 25px 60px rgba(0,0,0,.5); }
+        /* No lift on touch to avoid sticky hover */
+        @media (hover: none) {
+          .cat-card:hover { transform:none; box-shadow:none; }
+        }
 
         .s-pill {
-          padding:6px 12px; border-radius:9px; font-size:12px; font-weight:500;
+          padding:5px 11px; border-radius:9px; font-size:11px; font-weight:500;
           font-family:'JetBrains Mono',monospace; cursor:default;
           transition:all .25s ease;
         }
@@ -387,9 +441,15 @@ const Skills: React.FC = () => {
         .bar-track { width:100%; height:5px; background:rgba(255,255,255,.06); border-radius:100px; overflow:hidden; }
         .bar-fill   { height:100%; border-radius:100px; width:0%; transition:width 1.2s cubic-bezier(.25,.46,.45,.94); }
 
-        .flip-card  { perspective:1000px; width:155px; height:155px; }
-        .flip-inner { position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .7s cubic-bezier(.175,.885,.32,1.275); }
+        /* Flip card — tap-friendly on mobile */
+        .flip-card  { perspective:1000px; }
+        .flip-inner {
+          position:relative; width:100%; height:100%;
+          transform-style:preserve-3d;
+          transition:transform .7s cubic-bezier(.175,.885,.32,1.275);
+        }
         .flip-card:hover .flip-inner { transform:rotateY(180deg); }
+        .flip-card.tapped .flip-inner { transform:rotateY(180deg); }
         .flip-f,.flip-b {
           position:absolute; inset:0; border-radius:18px; backface-visibility:hidden;
           display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
@@ -409,58 +469,99 @@ const Skills: React.FC = () => {
         .st5{transition-delay:.25s!important} .st6{transition-delay:.30s!important}
       `}</style>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: `0 clamp(16px, 4vw, 32px)` }}>
 
         {/* Header */}
-        <div ref={observeRef("h")} className={`s-rev ${vis("h") ? "show" : ""}`}
-          style={{ textAlign: "center", paddingTop: 40, paddingBottom: 52 }}>
+        <div
+          ref={observeRef("h")}
+          className={`s-rev ${vis("h") ? "show" : ""}`}
+          style={{ textAlign: "center", paddingTop: isMobile ? 24 : 40, paddingBottom: isMobile ? 32 : 52 }}
+        >
           <div className="sec-lbl">Capabilities</div>
-          <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "clamp(40px,5vw,68px)", fontWeight: 800, color: "white", marginBottom: 14, lineHeight: 1.1 }}>
+          <h1 style={{
+            fontFamily: "'Space Grotesk',sans-serif",
+            fontSize: "clamp(32px, 7vw, 68px)",
+            fontWeight: 800, color: "white", marginBottom: 14, lineHeight: 1.1,
+          }}>
             Skills &{" "}
-            <span style={{ background: "linear-gradient(135deg,#00d4ff,#7b2ff7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Expertise</span>
+            <span style={{ background: "linear-gradient(135deg,#00d4ff,#7b2ff7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Expertise
+            </span>
           </h1>
-          <p style={{ color: "rgba(255,255,255,.4)", fontSize: 17, maxWidth: 500, margin: "0 auto", lineHeight: 1.7 }}>
-            A full-stack toolkit spanning frontend to backend — orbiting my world. Drag the globe to explore.
+          <p style={{
+            color: "rgba(255,255,255,.4)",
+            fontSize: "clamp(14px, 2vw, 17px)",
+            maxWidth: 500, margin: "0 auto", lineHeight: 1.7,
+            padding: "0 8px",
+          }}>
+            A full-stack toolkit spanning frontend to backend — orbiting my world.{" "}
+            {isMobile ? "Drag the globe to explore." : "Drag the globe to explore."}
           </p>
         </div>
 
         {/* ── 3D Earth Globe ── */}
-        <div ref={observeRef("globe")} className={`s-rev ${vis("globe") ? "show" : ""}`} style={{ marginBottom: 68 }}>
-          <div className="sec-lbl" style={{ marginBottom: 24 }}>Interactive Globe</div>
+        <div ref={observeRef("globe")} className={`s-rev ${vis("globe") ? "show" : ""}`} style={{ marginBottom: isMobile ? 40 : 68 }}>
+          <div className="sec-lbl" style={{ marginBottom: 20 }}>Interactive Globe</div>
 
-          <div className="globe-wrap">
+          <div className="globe-wrap" style={{ height: globeHeight }}>
             <div className="star-field" />
             <div className="globe-canvas"><EarthGlobe /></div>
             <div className="globe-vignette" />
+            <div className="drag-hint">
+              {isMobile ? "drag to spin" : "drag globe to spin"}
+            </div>
           </div>
 
           {/* Legend */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "center", marginTop: 18 }}>
+          <div style={{
+            display: "flex", flexWrap: "wrap", gap: isMobile ? 5 : 7,
+            justifyContent: "center", marginTop: 16,
+          }}>
             {orbitLegend.map(s => (
               <span key={s.label} style={{
-                padding: "4px 11px", borderRadius: 100,
-                background: s.color + "15", border: `1px solid ${s.color}30`,
-                fontSize: 11, color: s.color, fontFamily: "'JetBrains Mono',monospace", fontWeight: 500,
+                padding: isMobile ? "3px 9px" : "4px 11px",
+                borderRadius: 100,
+                background: s.color + "15",
+                border: `1px solid ${s.color}30`,
+                fontSize: isMobile ? 10 : 11,
+                color: s.color,
+                fontFamily: "'JetBrains Mono',monospace",
+                fontWeight: 500,
               }}>{s.label}</span>
             ))}
           </div>
         </div>
 
         {/* Skill Category Cards */}
-        <div ref={observeRef("cats")} style={{ marginBottom: 68 }}>
-          <div className="sec-lbl" style={{ marginBottom: 28 }}>By Category</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+        <div ref={observeRef("cats")} style={{ marginBottom: isMobile ? 40 : 68 }}>
+          <div className="sec-lbl" style={{ marginBottom: 24 }}>By Category</div>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: catGridCols,
+            gap: isMobile ? 12 : 16,
+          }}>
             {skillCategories.map((cat, i) => (
-              <div key={cat.title}
+              <div
+                key={cat.title}
                 className={`cat-card st${i + 1} s-rev ${vis("cats") ? "show" : ""}`}
-                style={{ "--cc": cat.color } as React.CSSProperties}>
-                <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 16 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 11, background: cat.color + "18", display: "flex", alignItems: "center", justifyContent: "center", color: cat.color }}>{cat.icon}</div>
-                  <h3 style={{ color: "white", fontSize: 15, fontWeight: 700 }}>{cat.title}</h3>
+                style={{ "--cc": cat.color } as React.CSSProperties}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 14 }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 11,
+                    background: cat.color + "18",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: cat.color, flexShrink: 0,
+                  }}>{cat.icon}</div>
+                  <h3 style={{ color: "white", fontSize: "clamp(13px, 2vw, 15px)", fontWeight: 700 }}>{cat.title}</h3>
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {cat.skills.map(skill => (
-                    <div key={skill} className="s-pill" style={{ background: cat.color + "12", border: `1px solid ${cat.color}25`, color: cat.color + "bb" }}>{skill}</div>
+                    <div key={skill} className="s-pill" style={{
+                      background: cat.color + "12",
+                      border: `1px solid ${cat.color}25`,
+                      color: cat.color + "bb",
+                    }}>{skill}</div>
                   ))}
                 </div>
               </div>
@@ -469,20 +570,45 @@ const Skills: React.FC = () => {
         </div>
 
         {/* Proficiency Bars */}
-        <div ref={barsRef} style={{ marginBottom: 68 }}>
-          <div ref={observeRef("bars")} className={`s-rev ${vis("bars") ? "show" : ""}`} style={{ textAlign: "center", marginBottom: 32 }}>
+        <div ref={barsRef} style={{ marginBottom: isMobile ? 40 : 68 }}>
+          <div ref={observeRef("bars")} className={`s-rev ${vis("bars") ? "show" : ""}`} style={{ textAlign: "center", marginBottom: 28 }}>
             <div className="sec-lbl">Proficiency</div>
-            <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 34, fontWeight: 800, color: "white" }}>Skill Levels</h2>
+            <h2 style={{
+              fontFamily: "'Space Grotesk',sans-serif",
+              fontSize: "clamp(24px, 5vw, 34px)",
+              fontWeight: 800, color: "white",
+            }}>Skill Levels</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 48px", maxWidth: 900, margin: "0 auto" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: barGridCols,
+            gap: isMobile ? "14px 0" : "14px 48px",
+            maxWidth: 900,
+            margin: "0 auto",
+          }}>
             {proficiencies.map((item, i) => (
               <div key={item.skill} className={`s-rev ${vis("bars") ? "show" : ""}`} style={{ transitionDelay: `${i * 0.08}s` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ color: "rgba(255,255,255,.65)", fontSize: 13, fontWeight: 500 }}>{item.skill}</span>
-                  <span style={{ color: item.color, fontSize: 13, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace" }}>{item.level}%</span>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, gap: 8 }}>
+                  <span style={{
+                    color: "rgba(255,255,255,.65)",
+                    fontSize: "clamp(11px, 1.5vw, 13px)",
+                    fontWeight: 500,
+                    lineHeight: 1.3,
+                  }}>{item.skill}</span>
+                  <span style={{
+                    color: item.color,
+                    fontSize: "clamp(11px, 1.5vw, 13px)",
+                    fontWeight: 700,
+                    fontFamily: "'JetBrains Mono',monospace",
+                    flexShrink: 0,
+                  }}>{item.level}%</span>
                 </div>
                 <div className="bar-track">
-                  <div className="bar-fill" style={{ width: animatedBars ? `${item.level}%` : "0%", background: `linear-gradient(90deg,${item.color}70,${item.color})`, transitionDelay: `${i * 0.1 + 0.3}s` }} />
+                  <div className="bar-fill" style={{
+                    width: animatedBars ? `${item.level}%` : "0%",
+                    background: `linear-gradient(90deg,${item.color}70,${item.color})`,
+                    transitionDelay: `${i * 0.1 + 0.3}s`,
+                  }} />
                 </div>
               </div>
             ))}
@@ -490,25 +616,48 @@ const Skills: React.FC = () => {
         </div>
 
         {/* Currently Learning */}
-        <div ref={observeRef("learn")} className={`s-rev ${vis("learn") ? "show" : ""}`} style={{ textAlign: "center", paddingBottom: 90 }}>
+        <div
+          ref={observeRef("learn")}
+          className={`s-rev ${vis("learn") ? "show" : ""}`}
+          style={{ textAlign: "center", paddingBottom: 80 }}
+        >
           <div className="sec-lbl">In Progress</div>
-          <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 34, fontWeight: 800, color: "white", marginBottom: 32 }}>Currently Learning</h2>
-          <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
-            {learning.map((item, i) => (
-              <div key={item.tech} className="flip-card" style={{ transitionDelay: `${i * 0.1}s` }}>
-                <div className="flip-inner">
-                  <div className="flip-f">
-                    <div style={{ fontSize: 28 }}>{item.icon}</div>
-                    <div style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "'Space Grotesk',sans-serif" }}>{item.tech}</div>
-                    <div style={{ color: "rgba(255,255,255,.25)", fontSize: 10, fontFamily: "'JetBrains Mono',monospace" }}>hover to flip</div>
-                  </div>
-                  <div className="flip-b">
-                    <div style={{ color: "#00d4ff", fontSize: 12, lineHeight: 1.6 }}>{item.desc}</div>
+          <h2 style={{
+            fontFamily: "'Space Grotesk',sans-serif",
+            fontSize: "clamp(24px, 5vw, 34px)",
+            fontWeight: 800, color: "white", marginBottom: 28,
+          }}>Currently Learning</h2>
+
+          {/* Mobile: tap-to-reveal cards stacked vertically */}
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "stretch" }}>
+              {learning.map((item) => (
+                <MobileLearningCard key={item.tech} icon={item.icon} tech={item.tech} desc={item.desc} />
+              ))}
+            </div>
+          ) : (
+            // Tablet + Desktop: classic flip cards in a row
+            <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+              {learning.map((item, i) => (
+                <div
+                  key={item.tech}
+                  className="flip-card"
+                  style={{ width: 155, height: 155, transitionDelay: `${i * 0.1}s` }}
+                >
+                  <div className="flip-inner">
+                    <div className="flip-f">
+                      <div style={{ fontSize: 28 }}>{item.icon}</div>
+                      <div style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "'Space Grotesk',sans-serif" }}>{item.tech}</div>
+                      <div style={{ color: "rgba(255,255,255,.25)", fontSize: 10, fontFamily: "'JetBrains Mono',monospace" }}>hover to flip</div>
+                    </div>
+                    <div className="flip-b">
+                      <div style={{ color: "#00d4ff", fontSize: 12, lineHeight: 1.6 }}>{item.desc}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </div>
