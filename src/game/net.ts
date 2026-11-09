@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { io, type Socket } from "socket.io-client";
 
-// Unset in production means solo mode: the lobby works, just without other players.
-const SERVER_URL: string | null = import.meta.env.VITE_LOBBY_SERVER_URL || (import.meta.env.DEV ? "http://localhost:3001" : null);
+// VITE_LOBBY_SERVER_URL overrides; otherwise local server in dev, the Render deploy in production.
+const SERVER_URL: string = import.meta.env.VITE_LOBBY_SERVER_URL || (import.meta.env.DEV ? "http://localhost:3001" : "https://sm-lobby.onrender.com");
 const SEND_HZ = 15;
 const CHAT_KEEP = 40;
 const NAME_KEY = "sm-callsign";
