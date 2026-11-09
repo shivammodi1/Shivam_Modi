@@ -1,45 +1,41 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import Layout from "@/components/Layout";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import MainMenu from "./game/MainMenu";
+import Browse from "./game/Browse";
+import NotFound from "./game/NotFound";
 
-// Pages
-import Home from "./pages/Home";
-import About from "./pages/About";
-import Projects from "./pages/Projects";
-import Skills from "./pages/Skills";
-import Certifications from "./pages/Certifications";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
+// three.js is large; only players who press Play download it.
+const Lobby = lazy(() => import("./game/Lobby"));
 
-const queryClient = new QueryClient();
+// Paths from the previous site, so links already shared keep working.
+const LEGACY_REDIRECTS: Record<string, string> = {
+  "/home": "/",
+  "/about": "/browse/profile",
+  "/projects": "/browse/projects",
+  "/skills": "/browse/arsenal",
+  "/certifications": "/browse/trophies",
+  "/contact": "/browse/comms",
+};
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ThemeProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/skills" element={<Skills />} />
-              <Route path="/certifications" element={<Certifications />} />
-              <Route path="/contact" element={<Contact />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
-      </ThemeProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<MainMenu />} />
+      <Route
+        path="/play"
+        element={
+          <Suspense fallback={<div style={{ position: "fixed", inset: 0, background: "#0b1118" }} />}>
+            <Lobby />
+          </Suspense>
+        }
+      />
+      <Route path="/browse/:station?" element={<Browse />} />
+      {Object.entries(LEGACY_REDIRECTS).map(([from, to]) => (
+        <Route key={from} path={from} element={<Navigate to={to} replace />} />
+      ))}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </BrowserRouter>
 );
 
 export default App;

@@ -1,0 +1,2038 @@
+/* Valorant-inspired UI for the main menu and the 3D lobby. */
+.vl-root {
+  --accent: #ff4655;
+  --accent-dark: #bd3944;
+  --navy: #0f1923;
+  --ink: #0b1118;
+  --bone: #ece8e1;
+  --muted: rgba(236, 232, 225, 0.6);
+  --faint: rgba(236, 232, 225, 0.14);
+  --alt: #3cf2c4;
+  --on-accent: #ece8e1;
+  --gold: #f5c451;
+  --cut: 14px;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--navy);
+  color: var(--bone);
+  font-family: Rajdhani, "DM Sans", sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+.vl-root *,
+.vl-root *::before,
+.vl-root *::after {
+  box-sizing: border-box;
+}
+:where(.vl-root) a {
+  color: inherit;
+  text-decoration: none;
+}
+:where(.vl-root) button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.vl-root kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid rgba(236, 232, 225, 0.4);
+  background: color-mix(in srgb, var(--navy) 70%, transparent);
+  font: 700 12px/1 Rajdhani, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- shared atoms ---------- */
+.vl-kicker {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.vl-kicker--muted {
+  color: var(--muted);
+  margin-top: 22px;
+}
+.vl-title {
+  margin: 0 0 12px;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(40px, 5vw, 64px);
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.vl-title--huge {
+  font-size: clamp(56px, 7vw, 96px);
+}
+.vl-text {
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.vl-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.vl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 14px;
+}
+.vl-chip {
+  padding: 5px 12px;
+  border: 1px solid var(--faint);
+  background: rgba(236, 232, 225, 0.04);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.vl-root a.vl-chip:hover,
+.vl-root button.vl-chip:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.vl-chip--locked {
+  border-style: dashed;
+  color: var(--muted);
+}
+.vl-chip--locked::before {
+  content: "🔒 ";
+}
+.vl-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border: 1px solid rgba(236, 232, 225, 0.5);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  transition: background 0.18s, color 0.18s, transform 0.18s;
+}
+.vl-root .vl-btn:hover {
+  background: var(--bone);
+  color: var(--navy);
+}
+.vl-btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+.vl-root .vl-btn--primary:hover {
+  background: var(--bone);
+  color: var(--accent);
+}
+.vl-btn--xl {
+  width: 100%;
+  padding: 18px;
+  font-size: 22px;
+  letter-spacing: 0.24em;
+}
+.vl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.vl-link {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.vl-root .vl-link:hover {
+  color: var(--accent);
+}
+.vl-logo {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  background: var(--accent);
+  color: var(--on-accent);
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+}
+.vl-logo--big {
+  width: 120px;
+  height: 120px;
+  font-size: 64px;
+  animation: vl-pulse 1.8s ease-in-out infinite;
+}
+
+/* ---------- boot + main menu ---------- */
+.vl-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--navy), white 6%), var(--ink) 70%);
+  cursor: pointer;
+}
+.vl-boot p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  animation: vl-blink 1.4s steps(2) infinite;
+}
+
+.vl-menu__bg,
+.vl-menu__bg > * {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.vl-menu__bg {
+  background: radial-gradient(ellipse at 70% 40%, color-mix(in srgb, var(--navy), white 8%) 0%, var(--navy) 55%, var(--ink) 100%);
+}
+.vl-menu__slab--a {
+  inset: -20% 18% -20% auto;
+  width: 46vw;
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  transform: skewX(-14deg);
+  opacity: 0.9;
+  animation: vl-slab 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-menu__slab--b {
+  inset: -20% 10% -20% auto;
+  width: 4vw;
+  background: var(--bone);
+  transform: skewX(-14deg);
+  opacity: 0.12;
+  animation: vl-slab 1.2s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-menu__ghost {
+  inset: auto -2vw -6vw auto;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 34vw;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(236, 232, 225, 0.06);
+}
+.vl-menu__grid {
+  background-image: linear-gradient(rgba(236, 232, 225, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(236, 232, 225, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(90deg, #000 0%, transparent 60%);
+}
+.vl-menu__agent {
+  position: absolute;
+  right: 12vw;
+  bottom: 0;
+  width: min(44vw, 620px);
+  height: 88vh;
+  transition: transform 0.25s ease-out;
+  pointer-events: none;
+}
+.vl-menu__agent img {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.6)) contrast(1.05);
+  animation: vl-rise 0.9s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-menu__agent-glow {
+  position: absolute;
+  inset: 20% 10% 0;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 45%, transparent), transparent 65%);
+  filter: blur(30px);
+}
+
+.vl-menu__top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 18px 36px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 85%, transparent), transparent);
+}
+.vl-menu__tabs {
+  display: flex;
+  gap: 26px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.vl-menu__tabs > * {
+  position: relative;
+  padding: 6px 0;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.vl-menu__tabs > *:hover,
+.vl-menu__tabs .is-active {
+  color: var(--bone);
+}
+.vl-menu__tabs .is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 3px;
+  background: var(--accent);
+}
+.vl-menu__player {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.vl-menu__currency {
+  text-align: right;
+  line-height: 1;
+}
+.vl-menu__currency b {
+  display: block;
+  font-size: 20px;
+}
+.vl-menu__currency small,
+.vl-menu__card small {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-menu__card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 6px;
+  background: rgba(236, 232, 225, 0.08);
+  border-left: 3px solid var(--accent);
+}
+.vl-menu__card b {
+  display: block;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+.vl-menu__avatar {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  object-position: top;
+  border: 2px solid var(--accent);
+}
+.vl-menu__level {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--alt);
+  color: var(--alt);
+  font-weight: 700;
+  transform: rotate(45deg);
+}
+
+.vl-menu__main {
+  position: absolute;
+  left: 6vw;
+  top: 50%;
+  z-index: 5;
+  transform: translateY(-50%);
+  animation: vl-in-left 0.8s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-menu__name {
+  margin: 0 0 30px;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(80px, 11vw, 168px);
+  line-height: 0.82;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+.vl-menu__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.vl-play {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 340px;
+  margin-bottom: 14px;
+  padding: 14px 26px 12px;
+  background: var(--accent);
+  color: var(--on-accent);
+  clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+.vl-play::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bone);
+  transform: translateX(-101%);
+  transition: transform 0.28s cubic-bezier(0.7, 0, 0.3, 1);
+}
+.vl-play > * {
+  position: relative;
+}
+.vl-play span {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 58px;
+  line-height: 0.95;
+  letter-spacing: 0.08em;
+  transition: color 0.28s;
+}
+.vl-play small {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  transition: color 0.28s;
+}
+.vl-play:hover::before {
+  transform: translateX(0);
+}
+.vl-play:hover span,
+.vl-play:hover small {
+  color: var(--accent);
+}
+.vl-menu__item {
+  position: relative;
+  padding: 6px 0 6px 18px;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  transition: color 0.15s, padding 0.2s;
+}
+.vl-menu__item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  transform: translateY(-50%) rotate(45deg) scale(0);
+  transition: transform 0.2s;
+}
+.vl-menu__item:hover {
+  color: var(--bone);
+  padding-left: 26px;
+}
+.vl-menu__item:hover::before {
+  transform: translateY(-50%) rotate(45deg) scale(1);
+}
+.vl-menu__side {
+  position: absolute;
+  right: 36px;
+  bottom: 64px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  animation: vl-in-right 0.8s 0.4s both;
+}
+.vl-menu__news {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 300px;
+  padding: 16px 18px;
+  background: color-mix(in srgb, var(--ink) 82%, transparent);
+  border: 1px solid var(--faint);
+  border-left: 3px solid var(--gold);
+  backdrop-filter: blur(6px);
+  transition: border-color 0.15s;
+}
+.vl-menu__news .vl-tag {
+  align-self: flex-start;
+}
+.vl-menu__news--live {
+  border-left-color: var(--accent);
+}
+.vl-menu__news b {
+  font-size: 18px;
+  line-height: 1.15;
+}
+.vl-menu__news small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.vl-menu__news:hover {
+  border-color: var(--gold);
+}
+.vl-menu__news--live:hover {
+  border-color: var(--accent);
+}
+.vl-menu__foot {
+  position: absolute;
+  left: 36px;
+  right: 36px;
+  bottom: 22px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.vl-matchfound {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--ink) 75%, transparent);
+  animation: vl-fade 0.2s both;
+}
+.vl-matchfound__band {
+  width: 100%;
+  padding: 34px 0;
+  text-align: center;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--alt) 18%, transparent) 20%, color-mix(in srgb, var(--alt) 18%, transparent) 80%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--alt) 50%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--alt) 50%, transparent);
+  animation: vl-band 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-matchfound__band small {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--alt);
+}
+.vl-matchfound__band b {
+  display: block;
+  margin: 6px 0;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 72px;
+  letter-spacing: 0.06em;
+}
+.vl-matchfound__band span {
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- lobby ---------- */
+.vl-lobby canvas {
+  display: block;
+}
+.vl-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+}
+.vl-loading__bar {
+  width: 320px;
+  height: 3px;
+  background: var(--faint);
+  overflow: hidden;
+}
+.vl-loading__bar i {
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--accent);
+  animation: vl-load 1s ease-in-out infinite;
+}
+
+.vl-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  transition: opacity 0.2s;
+}
+.vl-hud--dim {
+  opacity: 0.25;
+}
+
+.vl-scorebar {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+}
+.vl-scorebar__side,
+.vl-scorebar__mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.vl-scorebar__side {
+  min-width: 110px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--navy) 72%, transparent);
+}
+.vl-scorebar__side span {
+  font-size: 26px;
+  font-weight: 700;
+}
+.vl-scorebar__side small,
+.vl-scorebar__mid small {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-scorebar__side:first-child span {
+  color: var(--alt);
+}
+.vl-scorebar__mid {
+  padding: 8px 22px;
+  background: rgba(236, 232, 225, 0.92);
+  color: var(--navy);
+  text-shadow: none;
+}
+.vl-scorebar__mid small {
+  color: color-mix(in srgb, var(--navy) 70%, transparent);
+}
+.vl-scorebar__mid b {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 26px;
+  letter-spacing: 0.06em;
+}
+
+.vl-minimap {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  border: 1px solid var(--faint);
+}
+
+.vl-feed {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.vl-feed__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--alt) 25%, transparent), color-mix(in srgb, var(--navy) 75%, transparent));
+  border-right: 3px solid var(--alt);
+  font-size: 15px;
+  font-weight: 700;
+  animation: vl-in-right 0.25s both;
+}
+.vl-feed__you {
+  color: var(--alt);
+}
+.vl-feed__gun {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-feed__victim {
+  color: var(--accent);
+}
+
+.vl-crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.vl-crosshair i,
+.vl-crosshair b {
+  position: absolute;
+  background: var(--alt);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.75);
+}
+.vl-crosshair b {
+  width: 2px;
+  height: 2px;
+  left: -1px;
+  top: -1px;
+}
+.vl-crosshair i:nth-child(1) {
+  width: 2px;
+  height: 6px;
+  left: -1px;
+  top: -11px;
+}
+.vl-crosshair i:nth-child(2) {
+  width: 2px;
+  height: 6px;
+  left: -1px;
+  top: 5px;
+}
+.vl-crosshair i:nth-child(3) {
+  width: 6px;
+  height: 2px;
+  left: -11px;
+  top: -1px;
+}
+.vl-crosshair i:nth-child(4) {
+  width: 6px;
+  height: 2px;
+  left: 5px;
+  top: -1px;
+}
+.vl-hitmarker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  background: linear-gradient(45deg, transparent 46%, #fff 46%, #fff 54%, transparent 54%),
+    linear-gradient(-45deg, transparent 46%, #fff 46%, #fff 54%, transparent 54%);
+  mask: radial-gradient(circle, transparent 6px, #000 6.5px);
+  animation: vl-hitmarker 0.22s ease-out forwards;
+}
+.vl-hitmarker.is-head {
+  background: linear-gradient(45deg, transparent 46%, var(--gold) 46%, var(--gold) 54%, transparent 54%),
+    linear-gradient(-45deg, transparent 46%, var(--gold) 46%, var(--gold) 54%, transparent 54%);
+}
+.vl-hitmarker.is-kill {
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  background: linear-gradient(45deg, transparent 45%, var(--accent) 45%, var(--accent) 55%, transparent 55%),
+    linear-gradient(-45deg, transparent 45%, var(--accent) 45%, var(--accent) 55%, transparent 55%);
+}
+.vl-killbanner {
+  position: absolute;
+  left: 50%;
+  bottom: 23%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  animation: vl-killbanner 1.4s ease-out forwards;
+}
+.vl-killbanner span {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.vl-killbanner b {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--accent);
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 30px;
+  transform: rotate(45deg);
+}
+.vl-prompt {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 46px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px 7px 8px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--navy) 80%, transparent);
+  border-left: 3px solid var(--alt);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  animation: vl-fade 0.15s both;
+}
+.vl-prompt kbd {
+  background: var(--alt);
+  color: var(--navy);
+  border-color: var(--alt);
+}
+
+.vl-vitals {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-210%);
+}
+.vl-vitals__shield {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 38px;
+  background: rgba(236, 232, 225, 0.85);
+  color: var(--navy);
+  font-weight: 700;
+  text-shadow: none;
+  clip-path: polygon(50% 0, 100% 18%, 100% 70%, 50% 100%, 0 70%, 0 18%);
+}
+.vl-vitals__hp b {
+  display: block;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1;
+}
+.vl-vitals__bar {
+  display: block;
+  width: 110px;
+  height: 4px;
+  background: var(--bone);
+}
+.vl-abilities {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-30%);
+}
+.vl-ability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 66px;
+  padding: 6px 6px 5px;
+  background: color-mix(in srgb, var(--navy) 60%, transparent);
+  border-bottom: 2px solid var(--faint);
+}
+.vl-ability span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-ammo {
+  position: absolute;
+  right: 28px;
+  bottom: 22px;
+  text-align: right;
+}
+.vl-ammo__count {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+  line-height: 1;
+}
+.vl-ammo__count b {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 56px;
+}
+.vl-ammo__count b.is-low {
+  color: var(--accent);
+}
+.vl-ammo__count > span {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.vl-ammo__reload {
+  font-size: 22px !important;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold) !important;
+  animation: vl-blink 0.6s steps(2) infinite;
+}
+.vl-ammo__gun {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.vl-ammo__gun small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+.vl-mute {
+  position: absolute;
+  right: 28px;
+  bottom: 118px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* pause menu */
+.vl-pause {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: safe center;
+  overflow-y: auto;
+  justify-content: flex-start;
+  padding-left: 6vw;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 94%, transparent) 0%, color-mix(in srgb, var(--ink) 75%, transparent) 45%, color-mix(in srgb, var(--ink) 20%, transparent) 100%);
+  animation: vl-fade 0.2s both;
+}
+.vl-pause__card {
+  width: min(520px, 90vw);
+  padding: 32px 0;
+  animation: vl-in-left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-pause__lead {
+  margin: 0 0 22px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.vl-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px 14px;
+  margin: 22px 0 4px;
+}
+.vl-controls > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.vl-pause__stat {
+  margin: 14px 0 0;
+  color: var(--alt);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.vl-pause__quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.vl-pause__footer {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px solid var(--faint);
+}
+
+/* station panels */
+.vl-panel-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 3vh 3vw;
+  background: color-mix(in srgb, var(--ink) 70%, transparent);
+  backdrop-filter: blur(6px);
+  animation: vl-fade 0.18s both;
+  user-select: text;
+}
+.vl-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(1180px, 100%);
+  max-height: 100%;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--navy) 92%, white 4%), color-mix(in srgb, var(--ink) 98%, transparent));
+  border: 1px solid var(--faint);
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
+  animation: vl-panel-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-panel__tabs {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--faint);
+  overflow-x: auto;
+}
+.vl-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 16px;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted) !important;
+  border-bottom: 3px solid transparent !important;
+  transition: color 0.15s, background 0.15s;
+}
+.vl-tab:hover {
+  color: var(--bone) !important;
+  background: rgba(236, 232, 225, 0.04) !important;
+}
+.vl-tab.is-active {
+  color: var(--bone) !important;
+  border-bottom-color: var(--accent) !important;
+}
+.vl-panel__close {
+  margin-left: auto;
+  padding: 0 26px 0 22px !important;
+  font-size: 13px;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
+  white-space: nowrap;
+}
+.vl-panel__close:hover {
+  background: var(--bone) !important;
+  color: var(--accent) !important;
+}
+.vl-panel__body {
+  padding: 28px 34px 34px;
+  overflow-y: auto;
+  animation: vl-fade 0.25s both;
+}
+
+.vl-projects {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 32px;
+}
+.vl-projects__shot {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border: 1px solid var(--faint);
+  background: var(--ink);
+}
+.vl-projects__shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: vl-zoom 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-projects__shot .vl-tag {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+}
+.vl-projects__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  align-content: start;
+}
+.vl-agentcard {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--faint) !important;
+  background: var(--ink) !important;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.vl-agentcard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.6) brightness(0.6);
+  transition: filter 0.2s, transform 0.3s;
+}
+.vl-agentcard span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 8px 6px;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--ink) 95%, transparent));
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.vl-agentcard:hover img,
+.vl-agentcard.is-active img {
+  filter: none;
+  transform: scale(1.06);
+}
+.vl-agentcard.is-active {
+  border-color: var(--accent) !important;
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.vl-arsenal {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 36px;
+}
+.vl-loadout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.vl-weapon {
+  padding: 14px 16px 4px;
+  background: rgba(236, 232, 225, 0.04);
+  border: 1px solid var(--faint);
+  border-left: 3px solid #7f9cff;
+}
+.vl-weapon.is-active {
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.vl-weapon__head b {
+  display: block;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 30px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.vl-weapon__head small {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-weapon .vl-chip {
+  font-size: 13px;
+  padding: 3px 9px;
+}
+.vl-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.vl-stat__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.vl-stat__label small {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.vl-stat__label b {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 24px;
+}
+.vl-stat__track {
+  height: 6px;
+  background: var(--faint);
+}
+.vl-stat__track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #ff8a93);
+  transform-origin: left;
+  animation: vl-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.vl-trophies {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.vl-trophy {
+  padding: 18px 20px;
+  background: rgba(236, 232, 225, 0.04);
+  border: 1px solid var(--faint);
+}
+.vl-trophy.is-featured {
+  border-color: rgba(245, 196, 81, 0.6);
+  background: linear-gradient(160deg, rgba(245, 196, 81, 0.12), rgba(236, 232, 225, 0.03));
+}
+.vl-trophy.is-featured .vl-tag {
+  background: var(--gold);
+  color: var(--ink);
+}
+.vl-trophy.is-active {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.vl-trophy__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.vl-trophy__top small {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.vl-trophy h3 {
+  margin: 0 0 2px;
+  font-size: 21px;
+  line-height: 1.15;
+}
+.vl-trophy__issuer {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.vl-trophy .vl-text {
+  font-size: 15px;
+}
+
+.vl-profile {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 36px;
+}
+.vl-profile__portrait {
+  position: relative;
+  align-self: start;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
+}
+.vl-profile__portrait img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+.vl-profile__class {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--ink) 85%, transparent);
+}
+.vl-profile__class small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-profile__class b {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 28px;
+  letter-spacing: 0.08em;
+}
+.vl-role {
+  margin: -4px 0 18px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--alt);
+}
+.vl-profile__stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.vl-profile__stats > div {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(236, 232, 225, 0.05);
+  border-top: 2px solid var(--accent);
+}
+.vl-profile__stats b {
+  display: block;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1;
+}
+.vl-profile__stats small {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-edu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.vl-edu > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--faint);
+}
+.vl-edu b {
+  font-size: 16px;
+}
+.vl-edu span {
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.vl-edu small {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.vl-comms {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+}
+.vl-comms__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vl-comms__list > * {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  background: rgba(236, 232, 225, 0.04);
+  border: 1px solid var(--faint);
+  border-left: 3px solid var(--alt);
+  transition: border-color 0.15s, background 0.15s;
+}
+.vl-comms__list > a:hover {
+  border-color: var(--alt);
+  background: color-mix(in srgb, var(--alt) 8%, transparent);
+}
+.vl-comms__list small {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-comms__list b {
+  font-size: 19px;
+  word-break: break-all;
+}
+
+/* ---------- shared additions ---------- */
+.vl-gap {
+  margin-top: 22px;
+}
+.vl-tag--gold {
+  background: var(--gold);
+  color: var(--ink);
+}
+.vl-tag--muted {
+  background: var(--faint);
+  color: var(--bone);
+}
+.vl-live,
+.vl-snapshot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.vl-live {
+  color: var(--alt);
+  border: 1px solid color-mix(in srgb, var(--alt) 50%, transparent);
+}
+.vl-live::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--alt);
+  animation: vl-blink 1.2s steps(2) infinite;
+}
+.vl-snapshot {
+  color: var(--muted);
+  border: 1px solid var(--faint);
+}
+
+/* theme picker */
+.vl-themes {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--ink) 82%, transparent);
+  border: 1px solid var(--faint);
+}
+.vl-themes--compact {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.vl-themes__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-themes__row {
+  display: flex;
+  gap: 8px;
+}
+.vl-swatch {
+  width: 26px;
+  height: 26px;
+  transform: rotate(45deg) scale(0.82);
+  border: 2px solid transparent !important;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.vl-swatch:hover {
+  transform: rotate(45deg) scale(0.95);
+}
+.vl-swatch.is-active {
+  border-color: var(--bone) !important;
+  transform: rotate(45deg) scale(1);
+}
+
+/* profile "now" pill */
+.vl-now {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -6px 0 16px;
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent) !important;
+  font-size: 15px;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+}
+.vl-now i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);
+  animation: vl-blink 1.4s steps(2) infinite;
+}
+.vl-now small {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* career */
+.vl-missions {
+  display: grid;
+  gap: 12px;
+}
+.vl-mission {
+  padding: 20px 22px;
+  background: rgba(236, 232, 225, 0.04);
+  border: 1px solid var(--faint);
+  border-left: 3px solid var(--faint);
+}
+.vl-mission.is-active {
+  border-left-color: var(--accent);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 12%, transparent), rgba(236, 232, 225, 0.02) 60%);
+}
+.vl-mission__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.vl-mission__head small {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.vl-mission h3 {
+  margin: 0;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-weight: 400;
+  font-size: 40px;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+.vl-mission__company {
+  display: inline-block;
+  margin: 4px 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ranked */
+.vl-ranked__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.vl-ranked__total {
+  text-align: right;
+}
+.vl-ranked__total b {
+  display: block;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 56px;
+  line-height: 0.9;
+  color: var(--accent);
+}
+.vl-ranked__total small {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-ranked {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+  margin: 8px 0 14px;
+}
+.vl-rankcard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: rgba(236, 232, 225, 0.04);
+  border: 1px solid var(--faint);
+  border-top: 3px solid var(--accent);
+  transition: background 0.15s, border-color 0.15s;
+}
+.vl-rankcard:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.vl-rankcard__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.vl-rankcard__top b {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.vl-rankcard__big {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 60px;
+  line-height: 1;
+  margin-top: 6px;
+}
+.vl-rankcard small {
+  font-size: 14px;
+  color: var(--muted);
+}
+.vl-rankcard__foot {
+  margin-top: auto;
+  padding-top: 8px;
+}
+.vl-split {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  margin-top: 10px;
+}
+.vl-split i {
+  display: block;
+  transform-origin: left;
+  animation: vl-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.vl-split__legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.vl-github {
+  padding: 16px 18px;
+  background: rgba(236, 232, 225, 0.03);
+  border: 1px solid var(--faint);
+}
+.vl-github__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.vl-github__head b {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.vl-github__head small {
+  color: var(--muted);
+  margin-right: 6px;
+}
+.vl-github__nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.vl-github__nums b {
+  color: var(--bone);
+  font-size: 18px;
+  letter-spacing: 0;
+}
+.vl-repos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.vl-repo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--faint);
+  transition: border-color 0.15s;
+}
+.vl-repo:hover {
+  border-color: var(--accent);
+}
+.vl-repo b {
+  font-size: 16px;
+  word-break: break-word;
+}
+.vl-repo span {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.vl-repo small {
+  margin-top: auto;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+/* contact form */
+.vl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vl-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vl-form label span,
+.vl-callsign span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vl-form input,
+.vl-form textarea,
+.vl-callsign input,
+.vl-chat input {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(236, 232, 225, 0.05);
+  border: 1px solid var(--faint);
+  color: var(--bone);
+  font: 500 16px Rajdhani, sans-serif;
+  outline: none;
+  resize: vertical;
+  user-select: text;
+  transition: border-color 0.15s;
+}
+.vl-form input:focus,
+.vl-form textarea:focus,
+.vl-callsign input:focus,
+.vl-chat input:focus {
+  border-color: var(--accent);
+}
+.vl-form__ok {
+  margin: 0;
+  color: var(--alt);
+  font-weight: 700;
+}
+.vl-form__err {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+.vl-callsign {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.vl-callsign input {
+  font: 400 26px "Bebas Neue", sans-serif;
+  letter-spacing: 0.06em;
+}
+
+/* multiplayer */
+.vl-online {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(15, 25, 35, 0.6);
+}
+.vl-online--online {
+  color: #128a6a;
+}
+.vl-chat {
+  position: absolute;
+  left: 16px;
+  bottom: 120px;
+  width: min(420px, 40vw);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.vl-chat__log p {
+  margin: 0 0 3px;
+  padding: 3px 8px;
+  width: fit-content;
+  max-width: 100%;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  font-size: 15px;
+  line-height: 1.3;
+  word-wrap: break-word;
+  animation: vl-in-left 0.2s both;
+}
+.vl-chat__log p.is-system {
+  color: var(--muted);
+  font-style: italic;
+}
+.vl-chat.is-open .vl-chat__log p {
+  background: color-mix(in srgb, var(--ink) 80%, transparent);
+}
+.vl-chat form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+.vl-chat form span {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--alt);
+}
+.vl-chat input {
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--ink) 85%, transparent);
+}
+.vl-chat__hint {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* browse + 404 */
+.vl-browse,
+.vl-notfound {
+  overflow-y: auto;
+  user-select: text;
+}
+.vl-browse__bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 3vw;
+  background: linear-gradient(180deg, var(--ink), transparent);
+}
+.vl-browse__body {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 0 3vw 6vh;
+}
+.vl-browse .vl-panel {
+  max-height: none;
+}
+.vl-notfound {
+  display: grid;
+  place-items: center;
+}
+.vl-notfound__card {
+  position: relative;
+  padding: 24px;
+  max-width: 560px;
+}
+
+@media (max-width: 900px) {
+  .vl-projects,
+  .vl-arsenal,
+  .vl-profile,
+  .vl-comms {
+    grid-template-columns: 1fr;
+  }
+  .vl-menu__agent {
+    opacity: 0.35;
+    right: -10vw;
+    width: 90vw;
+  }
+  .vl-menu__tabs {
+    display: none;
+  }
+  .vl-ranked,
+  .vl-repos {
+    grid-template-columns: 1fr;
+  }
+  .vl-panel__body {
+    padding: 22px 18px 26px;
+  }
+  .vl-chat {
+    width: 60vw;
+  }
+}
+@media (max-width: 700px) {
+  .vl-menu {
+    overflow-y: auto;
+  }
+  .vl-menu__main {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    padding: 96px 20px 24px;
+  }
+  .vl-menu__name {
+    font-size: 84px;
+  }
+  .vl-play {
+    width: 100%;
+  }
+  .vl-menu__side {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    margin: 0 20px 72px;
+  }
+  .vl-menu__top {
+    padding: 14px 20px;
+  }
+  .vl-menu__currency {
+    display: none;
+  }
+  .vl-menu__foot {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    padding: 0 20px 28px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .vl-menu__agent {
+    display: none;
+  }
+  .vl-panel-wrap,
+  .vl-browse__body {
+    padding: 0 0 4vh;
+  }
+  .vl-panel {
+    clip-path: none;
+  }
+  .vl-ranked__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .vl-ranked__total {
+    text-align: left;
+  }
+}
+
+/* ---------- motion ---------- */
+@keyframes vl-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vl-pulse {
+  50% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 24px color-mix(in srgb, var(--accent) 70%, transparent));
+  }
+}
+@keyframes vl-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes vl-slab {
+  from {
+    transform: skewX(-14deg) translateX(60vw);
+  }
+}
+@keyframes vl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+}
+@keyframes vl-in-left {
+  from {
+    opacity: 0;
+    translate: -40px 0;
+  }
+}
+@keyframes vl-in-right {
+  from {
+    opacity: 0;
+    translate: 40px 0;
+  }
+}
+@keyframes vl-band {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes vl-load {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@keyframes vl-hitmarker {
+  from {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+@keyframes vl-killbanner {
+  0% {
+    opacity: 0;
+    translate: 0 14px;
+  }
+  12%,
+  70% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes vl-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+@keyframes vl-zoom {
+  from {
+    transform: scale(1.08);
+  }
+}
+@keyframes vl-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vl-root *,
+  .vl-root *::before,
+  .vl-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
